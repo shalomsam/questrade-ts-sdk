@@ -1,0 +1,6 @@
+{
+  "name": "Questrade TypeScript SDK",
+  "description": "Thin TypeScript SDK for Questrade API with complete types, error handling, rate limiting, and high-efficiency polling & streaming market data feeds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
