@@ -8,10 +8,10 @@ import { MockQuestradeEngine } from './src/sdk/mock-engine.ts';
 
 dotenv.config();
 
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3050;
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: '/ws/stream' });
+const wss = new WebSocketServer({ server, path: '/ws/stream', port: PORT });
 
 const mockEngine = new MockQuestradeEngine();
 

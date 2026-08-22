@@ -76,7 +76,7 @@ export class QuestradeClient {
     this.onTokenRefresh = options.onTokenRefresh;
     this.maxRetries = options.maxRetries ?? 3;
     this.timeoutMs = options.timeoutMs ?? 15000;
-    this.fetchImpl = options.fetch ?? globalThis.fetch;
+    this.fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
     this.proxyUrl = options.proxyUrl ? options.proxyUrl.replace(/\/+$/, '') : undefined;
     this.sandbox = options.sandbox ?? false;
 

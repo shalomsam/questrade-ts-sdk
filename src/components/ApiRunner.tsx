@@ -307,7 +307,7 @@ console.log('Questrade Server Time:', serverTime);`,
                       <input
                         type="text"
                         value={params[key] ?? ''}
-                        onChange={(e) => setParams({ ...params, [key]: e.target.value })}
+                        onChange={(e: { target: { value: any; }; }) => setParams({ ...params, [key]: e.target.value })}
                         className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white font-mono focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                       />
                     </div>
