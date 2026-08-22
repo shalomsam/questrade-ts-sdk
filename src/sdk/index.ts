@@ -1,5 +1,5 @@
 /**
- * questrade-ts - Thin, robust TypeScript SDK for Questrade API
+ * questrade-ts-sdk - Thin, robust TypeScript SDK for Questrade API
  * Official docs: https://www.questrade.com/api/documentation/getting-started
  */
 

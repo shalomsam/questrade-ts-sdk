@@ -53,7 +53,7 @@ export const ApiRunner: React.FC<ApiRunnerProps> = ({ client, mode }) => {
           .filter((n: number) => !isNaN(n));
         return await c.getQuotes(ids);
       },
-      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts';
+      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: process.env.QUESTRADE_REFRESH_TOKEN,
@@ -71,7 +71,7 @@ console.log('Quotes:', quotes);`,
       methodName: 'getAccounts',
       defaultParams: {},
       execute: async (c) => await c.getAccounts(),
-      generateSnippet: () => `import { QuestradeClient } from 'questrade-ts';
+      generateSnippet: () => `import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: process.env.QUESTRADE_REFRESH_TOKEN,
@@ -90,7 +90,7 @@ for (const acc of accounts) {
       methodName: 'getPositions',
       defaultParams: { accountId: '28491028' },
       execute: async (c, p) => await c.getPositions(p.accountId),
-      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts';
+      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: process.env.QUESTRADE_REFRESH_TOKEN,
@@ -107,7 +107,7 @@ console.log('Positions:', positions);`,
       methodName: 'getBalances',
       defaultParams: { accountId: '28491028' },
       execute: async (c, p) => await c.getBalances(p.accountId),
-      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts';
+      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: process.env.QUESTRADE_REFRESH_TOKEN,
@@ -124,7 +124,7 @@ console.log('Total CAD Equity:', balances.combinedBalances[0]?.totalEquity);`,
       methodName: 'searchSymbols',
       defaultParams: { prefix: 'SHOP' },
       execute: async (c, p) => await c.searchSymbols(p.prefix),
-      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts';
+      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: process.env.QUESTRADE_REFRESH_TOKEN,
@@ -149,7 +149,7 @@ console.log('Search matches:', symbols);`,
           interval: p.interval || 'OneDay',
         });
       },
-      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts';
+      generateSnippet: (p) => `import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: process.env.QUESTRADE_REFRESH_TOKEN,
@@ -170,7 +170,7 @@ console.log('Candles:', candles);`,
       methodName: 'getServerTime',
       defaultParams: {},
       execute: async (c) => await c.getServerTime(),
-      generateSnippet: () => `import { QuestradeClient } from 'questrade-ts';
+      generateSnippet: () => `import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: process.env.QUESTRADE_REFRESH_TOKEN,

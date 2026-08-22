@@ -19,7 +19,7 @@ const EXAMPLES: ExampleItem[] = [
     title: '01: Basic Authentication & Auto-Renewal',
     category: 'Auth',
     description: 'Initializes QuestradeClient, exchanges manual refresh token for live access credentials, handles the onTokenRefresh persistence callback, and queries server time.',
-    code: `import { QuestradeClient, QuestradeAuthError } from 'questrade-ts';
+    code: `import { QuestradeClient, QuestradeAuthError } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({
@@ -45,7 +45,7 @@ main().catch(console.error);`,
     title: '02: Account Discovery & Positions',
     category: 'Portfolio',
     description: 'Discovers active TFSA, Margin, RRSP, and FHSA accounts. Queries CAD & USD cash balances, buying power, total equity, and open positions with unrealized P&L.',
-    code: `import { QuestradeClient } from 'questrade-ts';
+    code: `import { QuestradeClient } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
@@ -79,7 +79,7 @@ main().catch(console.error);`,
     title: '03: Quotes & Candlestick Histories',
     category: 'Market Data',
     description: 'Searches symbols with ticker prefix, fetches Level 1 snap quotes for single & batch symbol IDs, and downloads historical OHLCV bars.',
-    code: `import { QuestradeClient } from 'questrade-ts';
+    code: `import { QuestradeClient } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
@@ -113,7 +113,7 @@ main().catch(console.error);`,
     title: '04: Real-Time WebSocket Streaming',
     category: 'Streaming',
     description: 'Subscribes to Questrade WebSocket stream port for low-latency Level 1 push updates and order execution notifications with heartbeat management.',
-    code: `import { QuestradeClient, QuestradeStreamFeed } from 'questrade-ts';
+    code: `import { QuestradeClient, QuestradeStreamFeed } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
@@ -143,7 +143,7 @@ main().catch(console.error);`,
     title: '05: High-Throughput Batch Polling',
     category: 'Market Data',
     description: 'Demonstrates batch HTTP polling up to 100 tickers per round-trip with intelligent tick deduplication to filter out redundant events.',
-    code: `import { QuestradeClient, QuestradePollFeed } from 'questrade-ts';
+    code: `import { QuestradeClient, QuestradePollFeed } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
@@ -171,7 +171,7 @@ main().catch(console.error);`,
     title: '06: Hybrid Feed with Auto-Fallback',
     category: 'Streaming',
     description: 'Unified market feed that starts with real-time WebSocket streaming and gracefully fails over to adaptive polling if WebSocket connection is firewalled.',
-    code: `import { QuestradeClient, QuestradeMarketFeed } from 'questrade-ts';
+    code: `import { QuestradeClient, QuestradeMarketFeed } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
@@ -198,7 +198,7 @@ main().catch(console.error);`,
     title: '07: Options Chains & Quotes',
     category: 'Options',
     description: 'Queries full options chains for an underlying equity, inspects expiration cycles & strikes, and retrieves Level 1 quotes for filtered strike ranges.',
-    code: `import { QuestradeClient } from 'questrade-ts';
+    code: `import { QuestradeClient } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
@@ -229,7 +229,7 @@ main().catch(console.error);`,
     title: '08: Complete Order Lifecycle',
     category: 'Orders',
     description: 'Pre-trade impact validation (testOrder), submitting limit/market orders, inspecting active orders, modifying price/quantity, and canceling orders.',
-    code: `import { QuestradeClient } from 'questrade-ts';
+    code: `import { QuestradeClient } from 'questrade-ts-sdk';
 
 async function main() {
   const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
@@ -301,11 +301,11 @@ export const ExamplesExplorer: React.FC = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => copyText('npm-install', 'npm install questrade-ts')}
+              onClick={() => copyText('npm-install', 'npm install questrade-ts-sdk')}
               className="px-3.5 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 text-xs font-medium transition-colors flex items-center gap-2 shadow-xs"
             >
               {copiedId === 'npm-install' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>npm install questrade-ts</span>
+              <span>npm install questrade-ts-sdk</span>
             </button>
             <button
               onClick={() => copyText('build-sdk', 'npm run build:sdk')}
@@ -429,7 +429,7 @@ export const ExamplesExplorer: React.FC = () => {
                 <span>Ready for NPM Open Source Release: <code className="font-mono text-slate-800">npm publish --access public</code></span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700">questrade-ts@1.0.0</span>
+                <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700">questrade-ts-sdk@1.0.0</span>
                 <span className="font-semibold text-slate-700">MIT</span>
               </div>
             </div>

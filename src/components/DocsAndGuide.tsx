@@ -11,8 +11,8 @@ export const DocsAndGuide: React.FC = () => {
   };
 
   const snippets = {
-    install: `npm install questrade-ts`,
-    auth: `import { QuestradeClient } from 'questrade-ts';
+    install: `npm install questrade-ts-sdk`,
+    auth: `import { QuestradeClient } from 'questrade-ts-sdk';
 
 // Initialize with a manual refresh token from Questrade API Centre
 const client = new QuestradeClient({
@@ -23,7 +23,7 @@ const client = new QuestradeClient({
     console.log('Token refreshed. Save new refresh token:', creds.refreshToken);
   },
 });`,
-    streaming: `import { QuestradeClient, QuestradeStreamFeed } from 'questrade-ts';
+    streaming: `import { QuestradeClient, QuestradeStreamFeed } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
 const stream = new QuestradeStreamFeed(client, {
@@ -39,7 +39,7 @@ stream.on('quote', (quote) => {
 // Subscribe to tickers by Symbol ID (SHOP.TO = 8049, AAPL = 12049)
 stream.subscribeQuotes([8049, 12049]);
 await stream.connect();`,
-    polling: `import { QuestradeClient, QuestradePollFeed } from 'questrade-ts';
+    polling: `import { QuestradeClient, QuestradePollFeed } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
 
@@ -61,7 +61,7 @@ pollFeed.start();`,
   QuestradeAuthError,
   QuestradeRateLimitError,
   QuestradeNotFoundError,
-} from 'questrade-ts';
+} from 'questrade-ts-sdk';
 
 try {
   const positions = await client.getPositions('28491028');

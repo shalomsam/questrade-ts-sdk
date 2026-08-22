@@ -305,7 +305,7 @@ export { QuestradeClient as default } from './client';`,
       name: 'package.json',
       desc: 'NPM package manifest with TypeScript exports and types declaration.',
       code: `{
-  "name": "questrade-ts",
+  "name": "questrade-ts-sdk",
   "version": "1.0.0",
   "description": "Lightweight, zero-dependency TypeScript SDK for Questrade API with auto token refresh, rate-limit backoff, and dual WebSocket streaming & adaptive polling feeds.",
   "type": "module",

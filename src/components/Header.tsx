@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const copyNpmInstall = () => {
-    navigator.clipboard.writeText('npm install questrade-ts');
+    navigator.clipboard.writeText('npm install questrade-ts-sdk');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-semibold text-slate-900 text-base leading-none">
-                  questrade-ts
+                  questrade-ts-sdk
                 </h1>
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
                   v1.0.0
@@ -159,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
               title="Copy npm install command"
               className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900 text-slate-100 text-xs font-mono rounded-lg hover:bg-slate-800 transition-colors"
             >
-              <span>npm i questrade-ts</span>
+              <span>npm i questrade-ts-sdk</span>
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
             </button>
           </div>

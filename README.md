@@ -1,9 +1,9 @@
-# questrade-ts
+# questrade-ts-sdk
 
-[![npm version](https://img.shields.io/npm/v/questrade-ts.svg?style=flat-square)](https://www.npmjs.com/package/questrade-ts)
+[![npm version](https://img.shields.io/npm/v/questrade-ts-sdk.svg?style=flat-square)](https://www.npmjs.com/package/questrade-ts-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
-[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg?style=flat-square)](https://bundlephobia.com/package/questrade-ts)
+[![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg?style=flat-square)](https://bundlephobia.com/package/questrade-ts-sdk)
 
 A lightweight, zero-dependency, production-ready TypeScript SDK for the **Questrade API** ([official documentation](https://www.questrade.com/api/documentation/getting-started)). Designed for algorithmic traders, portfolio trackers, and financial app developers in Node.js, Bun, Deno, and modern browser environments.
 
@@ -27,11 +27,11 @@ A lightweight, zero-dependency, production-ready TypeScript SDK for the **Questr
 ## 📦 Installation
 
 ```bash
-npm install questrade-ts
+npm install questrade-ts-sdk
 # or
-pnpm add questrade-ts
+pnpm add questrade-ts-sdk
 # or
-yarn add questrade-ts
+yarn add questrade-ts-sdk
 ```
 
 ---
@@ -39,7 +39,7 @@ yarn add questrade-ts
 ## 🚀 Quick Start
 
 ```typescript
-import { QuestradeClient } from 'questrade-ts';
+import { QuestradeClient } from 'questrade-ts-sdk';
 
 // 1. Initialize with your Questrade Refresh Token
 const client = new QuestradeClient({
@@ -72,10 +72,10 @@ main().catch(console.error);
 
 Questrade provides a manual or OAuth refresh token that expires after its first use. When exchanged, Questrade returns a short-lived **access token**, an **api_server** URL, and a **new refresh token**.
 
-`questrade-ts` manages this entire lifecycle automatically:
+`questrade-ts-sdk` manages this entire lifecycle automatically:
 
 ```typescript
-import { QuestradeClient } from 'questrade-ts';
+import { QuestradeClient } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({
   refreshToken: 'YOUR_INITIAL_REFRESH_TOKEN',
@@ -100,7 +100,7 @@ console.log('Authenticated! Connected to:', client.getCredentials()?.apiServer);
 Subscribes to Questrade's WebSocket push feed for low-latency Level 1 ticks and order lifecycle events.
 
 ```typescript
-import { QuestradeClient, QuestradeStreamFeed } from 'questrade-ts';
+import { QuestradeClient, QuestradeStreamFeed } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
 const stream = new QuestradeStreamFeed(client, {
@@ -127,7 +127,7 @@ stream.subscribe([8049, 9291, 12049]); // SHOP.TO, RY.TO, AAPL
 Ideal for web apps or environments where WebSockets are firewalled or restricted. Features built-in tick deduplication so listeners are only notified when price, spread, or volume changes.
 
 ```typescript
-import { QuestradeClient, QuestradePollFeed } from 'questrade-ts';
+import { QuestradeClient, QuestradePollFeed } from 'questrade-ts-sdk';
 
 const client = new QuestradeClient({ refreshToken: process.env.QUESTRADE_REFRESH_TOKEN });
 const pollFeed = new QuestradePollFeed(client, {
@@ -150,7 +150,7 @@ pollFeed.start();
 Automatically tries WebSocket streaming first, and seamlessly switches to adaptive polling if streaming connection fails.
 
 ```typescript
-import { QuestradeClient, QuestradeMarketFeed } from 'questrade-ts';
+import { QuestradeClient, QuestradeMarketFeed } from 'questrade-ts-sdk';
 
 const feed = new QuestradeMarketFeed(client, { mode: 'auto' });
 
@@ -307,7 +307,7 @@ All SDK errors inherit from `QuestradeError`:
 - `QuestradeStreamError`: WebSocket transport or handshake errors.
 
 ```typescript
-import { QuestradeRateLimitError, QuestradeAuthError } from 'questrade-ts';
+import { QuestradeRateLimitError, QuestradeAuthError } from 'questrade-ts-sdk';
 
 try {
   await client.getQuote(8049);

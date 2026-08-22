@@ -1,6 +1,6 @@
 # Questrade TypeScript SDK - Examples Directory
 
-This folder contains clean, self-contained TypeScript examples illustrating how to use `questrade-ts` in real-world Node.js or edge environments.
+This folder contains clean, self-contained TypeScript examples illustrating how to use `questrade-ts-sdk` in real-world Node.js or edge environments.
 
 ## Quick Run
 
