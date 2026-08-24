@@ -18,17 +18,31 @@ import { QuestradeCredentials } from './sdk/types.ts';
 export default function App() {
   const [mode, setMode] = useState<'sandbox' | 'live'>('sandbox');
   const [activeTab, setActiveTab] = useState<'feeds' | 'accounts' | 'symbols' | 'api' | 'examples' | 'sdk' | 'docs'>('feeds');
-  const [liveCredentials, setLiveCredentials] = useState<QuestradeCredentials | null>(() => {
-    try {
-      const saved = localStorage.getItem('questrade_credentials');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [liveCredentials, setLiveCredentials] = useState<QuestradeCredentials | null>(null);
 
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.data?.type !== 'questrade-oauth') return;
+      const data = event.data.data;
+      setLiveCredentials({
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        apiServer: data.api_server,
+        tokenType: data.token_type || 'Bearer',
+        expiresAt: Date.now() + (data.expires_in || 1800) * 1000,
+      });
+      setMode('live');
+    };
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+  }, []);
+
+  const handleStartOAuth = () => {
+    window.open('/api/questrade/oauth/start', 'questrade-oauth', 'popup,width=520,height=720');
+  };
 
   // Instantiate client dynamically based on mode and credentials
   const client = useMemo(() => {
@@ -36,7 +50,6 @@ export default function App() {
       return new QuestradeClient({
         apiServer: window.location.origin + '/api/sandbox',
         accessToken: 'SANDBOX_ACCESS_TOKEN',
-        sandbox: true,
       });
     }
 
@@ -48,11 +61,6 @@ export default function App() {
       autoRefresh: true,
       onTokenRefresh: (creds) => {
         setLiveCredentials(creds);
-        try {
-          localStorage.setItem('questrade_credentials', JSON.stringify(creds));
-        } catch {
-          // ignore
-        }
       },
     });
   }, [mode, liveCredentials]);
@@ -83,7 +91,6 @@ export default function App() {
       };
 
       setLiveCredentials(newCreds);
-      localStorage.setItem('questrade_credentials', JSON.stringify(newCreds));
       setMode('live');
     } catch (err: any) {
       setAuthError(err.message || 'Failed to exchange Questrade refresh token.');
@@ -95,7 +102,6 @@ export default function App() {
 
   const handleClearCredentials = () => {
     setLiveCredentials(null);
-    localStorage.removeItem('questrade_credentials');
     setMode('sandbox');
   };
 
@@ -111,6 +117,7 @@ export default function App() {
         onTabChange={setActiveTab}
         isAuthenticating={isAuthenticating}
         authError={authError}
+        onStartOAuth={handleStartOAuth}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">

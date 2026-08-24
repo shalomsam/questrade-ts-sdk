@@ -12,6 +12,7 @@ interface HeaderProps {
   onTabChange: (tab: 'feeds' | 'accounts' | 'symbols' | 'api' | 'examples' | 'sdk' | 'docs') => void;
   isAuthenticating: boolean;
   authError: string | null;
+  onStartOAuth: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   onTabChange,
   isAuthenticating,
   authError,
+  onStartOAuth,
 }) => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [inputToken, setInputToken] = useState('');
@@ -212,6 +214,14 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             <form onSubmit={handleSave} className="space-y-4">
+              <button
+                type="button"
+                onClick={onStartOAuth}
+                className="w-full px-3 py-2 text-xs bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium"
+              >
+                Sign in with Questrade OAuth
+              </button>
+              <div className="flex items-center gap-2 text-[11px] text-slate-400"><span className="h-px bg-slate-200 flex-1" /><span>or use a token</span><span className="h-px bg-slate-200 flex-1" /></div>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
                   Manual Refresh Token or Access Token

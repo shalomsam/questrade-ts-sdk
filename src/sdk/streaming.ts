@@ -21,6 +21,7 @@ export class QuestradeStreamFeed {
   private heartbeatTimer: any = null;
   private lastHeartbeat: number = 0;
   private streamPort: number | null = null;
+  private streamAuthenticated: boolean = false;
 
   // Event Listeners Map
   private listeners: Map<string, Set<EventCallback>> = new Map();
@@ -155,8 +156,8 @@ export class QuestradeStreamFeed {
       this.ws.onopen = () => {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
-        this.updateState('connected');
-        this.emit('connected');
+        this.streamAuthenticated = false;
+        this.updateState('connecting');
 
         // Step 3: Questrade handshake - Send access_token (without Bearer prefix)
         const tokenToSend = activeCreds.accessToken;
@@ -164,10 +165,6 @@ export class QuestradeStreamFeed {
 
         this.startHeartbeat();
 
-        // Resubscribe symbols if any
-        if (this.subscribedSymbolIds.size > 0) {
-          this.sendSubscriptionUpdate();
-        }
       };
 
       this.ws.onmessage = (event: any) => {
@@ -187,6 +184,7 @@ export class QuestradeStreamFeed {
       this.ws.onclose = (event: any) => {
         this.stopHeartbeat();
         this.ws = null;
+        this.streamAuthenticated = false;
         this.isConnecting = false;
 
         if (this.isExplicitlyClosed) {
@@ -304,7 +302,7 @@ export class QuestradeStreamFeed {
   // ==========================================
 
   private sendSubscriptionUpdate(): void {
-    if (!this.isConnected()) return;
+    if (!this.isConnected() || !this.streamAuthenticated) return;
     try {
       const payload = JSON.stringify({
         action: 'subscribe',
@@ -327,6 +325,23 @@ export class QuestradeStreamFeed {
       // Handle heartbeat / keep-alive
       if (parsed.type === 'heartbeat' || parsed.heartbeat) {
         this.lastHeartbeat = receiveTime;
+        return;
+      }
+
+      if (parsed.type === 'handshake') {
+        if (parsed.status !== 'authenticated') {
+          throw new QuestradeStreamError('Stream authentication failed', {
+            code: QuestradeApiErrorCode.STREAM_AUTHENTICATION_FAILED,
+            message: parsed.message || 'The stream rejected the access token.',
+            rawResponse: parsed,
+          });
+        }
+        this.streamAuthenticated = true;
+        this.updateState('connected');
+        this.emit('connected');
+        if (this.subscribedSymbolIds.size > 0) {
+          this.sendSubscriptionUpdate();
+        }
         return;
       }
 
@@ -358,6 +373,9 @@ export class QuestradeStreamFeed {
       }
     } catch (err: any) {
       // Non-JSON or corrupt frame
+      if (err instanceof QuestradeStreamError && err.code === QuestradeApiErrorCode.STREAM_AUTHENTICATION_FAILED) {
+        this.ws?.close(4001, 'Stream authentication failed');
+      }
       this.emit(
         'error',
         new QuestradeStreamError(`Failed to parse stream message: ${err.message}`, {

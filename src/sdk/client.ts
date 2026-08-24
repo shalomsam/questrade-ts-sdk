@@ -33,6 +33,7 @@ import {
   PositionsResponse,
   QuestradeClientOptions,
   QuestradeCredentials,
+  QuestradeOAuthOptions,
   QuestradeTokenResponse,
   QuotesResponse,
   StreamPortResponse,
@@ -62,8 +63,6 @@ export class QuestradeClient {
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
   private readonly proxyUrl?: string;
-  private readonly sandbox: boolean;
-
   private refreshPromise: Promise<QuestradeCredentials> | null = null;
   private rateLimitRemaining: number = 60;
   private rateLimitResetTime: number = 0;
@@ -78,8 +77,6 @@ export class QuestradeClient {
     this.timeoutMs = options.timeoutMs ?? 15000;
     this.fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
     this.proxyUrl = options.proxyUrl ? options.proxyUrl.replace(/\/+$/, '') : undefined;
-    this.sandbox = options.sandbox ?? false;
-
     // If access token is provided with no explicit expiry, assume 30 minutes from now
     if (this.accessToken) {
       this.expiresAt = Date.now() + 30 * 60 * 1000;
@@ -174,27 +171,33 @@ export class QuestradeClient {
 
         const data = (await response.json()) as QuestradeTokenResponse;
 
-        this.accessToken = data.access_token;
-        this.refreshToken = data.refresh_token;
-        this.apiServer = data.api_server.replace(/\/+$/, '');
-        this.tokenType = data.token_type || 'Bearer';
-        this.expiresAt = Date.now() + (data.expires_in || 1800) * 1000;
+        const accessToken = data.access_token;
+        const refreshToken = data.refresh_token;
+        const apiServer = data.api_server.replace(/\/+$/, '');
+        const tokenType = data.token_type || 'Bearer';
+        const expiresAt = Date.now() + (data.expires_in || 1800) * 1000;
 
         const newCredentials: QuestradeCredentials = {
-          accessToken: this.accessToken,
-          apiServer: this.apiServer,
-          refreshToken: this.refreshToken,
-          tokenType: this.tokenType,
-          expiresAt: this.expiresAt,
+          accessToken,
+          apiServer,
+          refreshToken,
+          tokenType,
+          expiresAt,
         };
 
         if (this.onTokenRefresh) {
           try {
             await this.onTokenRefresh(newCredentials);
           } catch (err) {
-            console.warn('[QuestradeClient] onTokenRefresh callback error:', err);
+            throw err;
           }
         }
+
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.apiServer = apiServer;
+        this.tokenType = tokenType;
+        this.expiresAt = expiresAt;
 
         return newCredentials;
       } finally {
@@ -203,6 +206,67 @@ export class QuestradeClient {
     })();
 
     return this.refreshPromise;
+  }
+
+  /** Build the Questrade authorization-code login URL. */
+  public getAuthorizationUrl(options: QuestradeOAuthOptions): string {
+    if (!options.clientId || !options.redirectUri) {
+      throw new QuestradeValidationError('clientId and redirectUri are required for OAuth authorization');
+    }
+
+    const url = new URL('https://login.questrade.com/oauth2/authorize');
+    url.searchParams.set('client_id', options.clientId);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('redirect_uri', options.redirectUri);
+    if (options.scope) url.searchParams.set('scope', options.scope);
+    if (options.state) url.searchParams.set('state', options.state);
+    return url.toString();
+  }
+
+  /** Exchange an authorization code for Questrade credentials. Keep clientSecret server-side. */
+  public async exchangeAuthorizationCode(
+    code: string,
+    options: QuestradeOAuthOptions
+  ): Promise<QuestradeCredentials> {
+    if (!code || !options.clientId || !options.redirectUri) {
+      throw new QuestradeValidationError('code, clientId, and redirectUri are required for OAuth token exchange');
+    }
+
+    const query = new URLSearchParams({
+      client_id: options.clientId,
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: options.redirectUri,
+    });
+    if (options.clientSecret) query.set('client_secret', options.clientSecret);
+
+    const tokenUrl = `https://login.questrade.com/oauth2/token?${query.toString()}`;
+    const url = this.proxyUrl ? `${this.proxyUrl}?url=${encodeURIComponent(tokenUrl)}` : tokenUrl;
+    const response = await this.fetchWithTimeout(url, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      throw new QuestradeAuthError(`Authorization-code exchange failed with HTTP ${response.status}: ${body}`, {
+        status: response.status,
+        code: QuestradeApiErrorCode.INVALID_ACCESS_TOKEN,
+        message: body,
+        rawResponse: body,
+      });
+    }
+
+    const data = (await response.json()) as QuestradeTokenResponse;
+    const credentials: QuestradeCredentials = {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      apiServer: data.api_server.replace(/\/+$/, ''),
+      tokenType: data.token_type || 'Bearer',
+      expiresAt: Date.now() + (data.expires_in || 1800) * 1000,
+    };
+    this.setCredentials(credentials);
+    if (this.onTokenRefresh) await this.onTokenRefresh(credentials);
+    return credentials;
   }
 
   /**
@@ -466,6 +530,17 @@ export class QuestradeClient {
     options?: { startTime?: string | Date; endTime?: string | Date }
   ): Promise<Activity[]> {
     if (!accountId) throw new QuestradeValidationError('Account ID is required for getActivities');
+    if (options?.startTime && options?.endTime) {
+      const startTime = new Date(options.startTime).getTime();
+      const endTime = new Date(options.endTime).getTime();
+      const maxRangeMs = 31 * 24 * 60 * 60 * 1000;
+      if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime < startTime) {
+        throw new QuestradeValidationError('getActivities requires a valid, non-reversed date range');
+      }
+      if (endTime - startTime > maxRangeMs) {
+        throw new QuestradeValidationError('getActivities supports a maximum date range of 31 days');
+      }
+    }
     const query = new URLSearchParams();
     if (options?.startTime) {
       query.set('startTime', options.startTime instanceof Date ? options.startTime.toISOString() : options.startTime);
@@ -541,6 +616,9 @@ export class QuestradeClient {
    */
   public async getQuotes(symbolIds: number[]): Promise<Level1Quote[]> {
     if (!symbolIds || symbolIds.length === 0) return [];
+    if (symbolIds.length > 100) {
+      throw new QuestradeValidationError('getQuotes supports at most 100 symbol IDs per request');
+    }
     const endpoint = `v1/markets/quotes?ids=${symbolIds.join(',')}`;
     const res = await this.request<QuotesResponse>(endpoint);
     return res.quotes || [];

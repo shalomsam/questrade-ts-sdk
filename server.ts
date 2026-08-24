@@ -11,7 +11,11 @@ dotenv.config();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3050;
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: '/ws/stream', port: PORT });
+const wss = new WebSocketServer({ server, path: '/v1/markets/quotes' });
+const oauthStates = new Set<string>();
+const oauthClientId = process.env.QUESTRADE_CLIENT_ID;
+const oauthClientSecret = process.env.QUESTRADE_CLIENT_SECRET;
+const oauthRedirectUri = process.env.QUESTRADE_OAUTH_REDIRECT_URI || `http://localhost:${PORT}/api/questrade/oauth/callback`;
 
 const mockEngine = new MockQuestradeEngine();
 
@@ -50,12 +54,49 @@ app.post('/api/questrade/exchange-token', async (req, res) => {
   }
 });
 
+app.get('/api/questrade/oauth/start', (req, res) => {
+  if (!oauthClientId) return res.status(503).json({ message: 'QUESTRADE_CLIENT_ID is not configured.' });
+  const state = crypto.randomUUID();
+  oauthStates.add(state);
+  const authorizationUrl = new URL('https://login.questrade.com/oauth2/authorize');
+  authorizationUrl.searchParams.set('client_id', oauthClientId);
+  authorizationUrl.searchParams.set('response_type', 'code');
+  authorizationUrl.searchParams.set('redirect_uri', oauthRedirectUri);
+  authorizationUrl.searchParams.set('state', state);
+  return res.redirect(authorizationUrl.toString());
+});
+
+app.get('/api/questrade/oauth/callback', async (req, res) => {
+  const { code, state, error } = req.query as { code?: string; state?: string; error?: string };
+  if (error) return res.status(400).send(`Questrade authorization failed: ${error}`);
+  if (!code || !state || !oauthStates.delete(state)) return res.status(400).send('Invalid or expired OAuth state.');
+  if (!oauthClientId) return res.status(503).send('QUESTRADE_CLIENT_ID is not configured.');
+
+  try {
+    const query = new URLSearchParams({ client_id: oauthClientId, code, grant_type: 'authorization_code', redirect_uri: oauthRedirectUri });
+    if (oauthClientSecret) query.set('client_secret', oauthClientSecret);
+    const response = await fetch(`https://login.questrade.com/oauth2/token?${query.toString()}`, {
+      method: 'POST', headers: { Accept: 'application/json' },
+    });
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json(data);
+    return res.type('html').send(`<script>window.opener?.postMessage(${JSON.stringify({ type: 'questrade-oauth', data })}, window.location.origin); window.close();</script>`);
+  } catch (err: any) {
+    return res.status(502).send(`OAuth token exchange failed: ${err.message}`);
+  }
+});
+
 // 2. Generic Questrade REST API Proxy (Handles CORS & Forwarding)
 app.all('/api/questrade/proxy', async (req, res) => {
   try {
     const targetUrl = req.query.url as string;
     if (!targetUrl) {
       return res.status(400).json({ message: 'Missing target URL in query (?url=...)' });
+    }
+
+    const parsedTarget = new URL(targetUrl);
+    if (parsedTarget.protocol !== 'https:' || !parsedTarget.hostname.endsWith('.questrade.com')) {
+      return res.status(403).json({ message: 'Proxy target must be an HTTPS Questrade host.' });
     }
 
     const authHeader = req.headers.authorization;
@@ -172,7 +213,7 @@ app.get('/api/sandbox/v1/symbols/:id/options', (req, res) => {
 app.get('/api/sandbox/v1/markets/quotes', (req, res) => {
   const isStream = req.query.stream === 'true';
   if (isStream) {
-    return res.json({ streamPort: 3000 });
+    return res.json({ streamPort: PORT });
   }
 
   const idsStr = req.query.ids as string;

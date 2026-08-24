@@ -41,8 +41,14 @@ export interface QuestradeClientOptions {
   fetch?: typeof fetch;
   /** Custom proxy URL if accessing through a proxy server (e.g. to bypass CORS) */
   proxyUrl?: string;
-  /** Enable simulated sandbox mode without live Questrade credentials */
-  sandbox?: boolean;
+}
+
+export interface QuestradeOAuthOptions {
+  clientId: string;
+  clientSecret?: string;
+  redirectUri: string;
+  scope?: string;
+  state?: string;
 }
 
 // ==========================================

@@ -91,6 +91,29 @@ await client.exchangeRefreshToken();
 console.log('Authenticated! Connected to:', client.getCredentials()?.apiServer);
 ```
 
+### OAuth authorization-code flow
+
+For server-side applications, configure `QUESTRADE_CLIENT_ID`, `QUESTRADE_CLIENT_SECRET` (optional), and `QUESTRADE_OAUTH_REDIRECT_URI` in the server environment. The SDK exposes the same flow for backend applications:
+
+```typescript
+const client = new QuestradeClient();
+const authorizationUrl = client.getAuthorizationUrl({
+  clientId: process.env.QUESTRADE_CLIENT_ID!,
+  clientSecret: process.env.QUESTRADE_CLIENT_SECRET,
+  redirectUri: process.env.QUESTRADE_OAUTH_REDIRECT_URI!,
+  state: 'use-a-cryptographically-random-session-state',
+});
+
+// Redirect the user to authorizationUrl, then exchange the callback code:
+await client.exchangeAuthorizationCode(code, {
+  clientId: process.env.QUESTRADE_CLIENT_ID!,
+  clientSecret: process.env.QUESTRADE_CLIENT_SECRET,
+  redirectUri: process.env.QUESTRADE_OAUTH_REDIRECT_URI!,
+});
+```
+
+Never expose `client_secret` or refresh tokens in browser code. The included workbench uses `/api/questrade/oauth/start` and `/api/questrade/oauth/callback` for this reason.
+
 ---
 
 ## 📡 Market Data Feeds
